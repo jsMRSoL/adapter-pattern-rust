@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 trait MediaPlayer {
-    fn play(&mut self, audio_type: &str, filename: &str);
+    fn play(&self, audio_type: &str, filename: &str);
 }
 
 trait AdvancedMediaPlayer {
@@ -13,14 +13,14 @@ impl AdvancedMediaPlayer for VlcPlayer {
     fn play_vlc(&self, filename: &str) {
 	println!("Playing vlc file. Name: {}", filename);
     }
-    fn play_mp4(&self, filename: &str) {
+    fn play_mp4(&self, _filename: &str) {
 	()
     }
 }
 
 struct Mp4Player;
 impl AdvancedMediaPlayer for Mp4Player {
-    fn play_vlc(&self, filename: &str) {
+    fn play_vlc(&self, _filename: &str) {
 	()
     }
     fn play_mp4(&self, filename: &str) {
@@ -46,7 +46,7 @@ impl<'a> MediaAdapter<'a> {
     }
 }
 impl<'a> MediaPlayer for MediaAdapter<'a> {
-    fn play(&mut self, audio_type: &str, filename: &str) {
+    fn play(&self, audio_type: &str, filename: &str) {
 	match audio_type {
 	    "vlc" => self.advanced_media_player.unwrap().play_vlc(filename),
 	    "mp4" => self.advanced_media_player.unwrap().play_mp4(filename),
@@ -57,7 +57,7 @@ impl<'a> MediaPlayer for MediaAdapter<'a> {
 
 struct AudioPlayer;
 impl<'a> MediaPlayer for AudioPlayer {
-    fn play(&mut self, audio_type: &str, filename: &str) {
+    fn play(&self, audio_type: &str, filename: &str) {
 	match audio_type {
 	    "mp3" => println!("Playing mp3 file. Name: {}", filename),
 	    "vlc" | "mp4" => {
@@ -69,7 +69,7 @@ impl<'a> MediaPlayer for AudioPlayer {
     }
 }
 fn main() {
-    let mut audioplayer = AudioPlayer;
+    let audioplayer = AudioPlayer;
 
     audioplayer.play("mp3", "Islands in the Stream.mp3");
     audioplayer.play("mp4", "Home Alone 32.mp4");
