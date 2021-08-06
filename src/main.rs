@@ -1,75 +1,50 @@
-#![allow(dead_code)]
-trait MediaPlayer {
-    fn play(&self, audio_type: &str, filename: &str);
+enum MediaPlayer {
+    AudioPlayer,
+    MediaAdapter,
 }
 
-trait AdvancedMediaPlayer {
-    fn play_vlc(&self, filename: &str);
-    fn play_mp4(&self, filename: &str);
-}
-
-struct VlcPlayer;
-impl AdvancedMediaPlayer for VlcPlayer {
-    fn play_vlc(&self, filename: &str) {
-	println!("Playing vlc file. Name: {}", filename);
-    }
-    fn play_mp4(&self, _filename: &str) {
-	()
-    }
-}
-
-struct Mp4Player;
-impl AdvancedMediaPlayer for Mp4Player {
-    fn play_vlc(&self, _filename: &str) {
-	()
-    }
-    fn play_mp4(&self, filename: &str) {
-	println!("Playing mp4 file. Name: {}", filename);
-    }
-}
-
-struct MediaAdapter<'a> {
-    advanced_media_player: Option<&'a dyn AdvancedMediaPlayer>,
-}
-impl<'a> MediaAdapter<'a> {
-    fn new(audio_type: &str) -> Self {
-	let amplayer: Option<&'a dyn AdvancedMediaPlayer> = if audio_type == "vlc" {
-	    Some(&VlcPlayer)
-	} else if audio_type == "mp4" {
-	    Some(&Mp4Player)
-	} else {
-	    None
-	};
-	Self {
-	    advanced_media_player: amplayer,
-	}
-    }
-}
-impl<'a> MediaPlayer for MediaAdapter<'a> {
+impl MediaPlayer {
     fn play(&self, audio_type: &str, filename: &str) {
-	match audio_type {
-	    "vlc" => self.advanced_media_player.unwrap().play_vlc(filename),
-	    "mp4" => self.advanced_media_player.unwrap().play_mp4(filename),
-	    _ => (),
-	}
+        match self {
+            MediaPlayer::AudioPlayer => self.basic_play(audio_type, filename),
+            MediaPlayer::MediaAdapter => self.advanced_play(audio_type, filename),
+        }
+    }
+    fn basic_play(&self, audio_type: &str, filename: &str) {
+        match audio_type {
+            "mp3" => println!("Playing mp3 file. Name: {}", filename),
+            "vlc" | "mp4" => {
+                MediaPlayer::MediaAdapter.play(audio_type, filename);
+            }
+            _ => println!("Invalid media. {} format not supported.", audio_type),
+        }
+    }
+
+    fn advanced_play(&self, audio_type: &str, filename: &str) {
+        let amplayer = match audio_type {
+            "vlc" => AdvancedMediaPlayer::VlcPlayer,
+            _ => AdvancedMediaPlayer::Mp4Player,
+        };
+        amplayer.play(filename);
     }
 }
 
-struct AudioPlayer;
-impl<'a> MediaPlayer for AudioPlayer {
-    fn play(&self, audio_type: &str, filename: &str) {
-	match audio_type {
-	    "mp3" => println!("Playing mp3 file. Name: {}", filename),
-	    "vlc" | "mp4" => {
-		let media_adapter = &mut MediaAdapter::new(audio_type);
-		media_adapter.play(audio_type, filename);
-	    }
-	    _ => println!("Invalid media. {} format not supported.", audio_type),
-	}
+enum AdvancedMediaPlayer {
+    VlcPlayer,
+    Mp4Player,
+}
+
+impl AdvancedMediaPlayer {
+    fn play(&self, filename: &str) {
+        match self {
+            AdvancedMediaPlayer::Mp4Player => println!("Playing mp4 file. Name: {}", filename),
+            AdvancedMediaPlayer::VlcPlayer => println!("Playing vlc file. Name: {}", filename),
+        }
     }
 }
+
 fn main() {
-    let audioplayer = AudioPlayer;
+    let audioplayer = MediaPlayer::AudioPlayer;
 
     audioplayer.play("mp3", "Islands in the Stream.mp3");
     audioplayer.play("mp4", "Home Alone 32.mp4");
